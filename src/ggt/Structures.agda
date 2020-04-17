@@ -4,8 +4,8 @@ module GGT.Structures
   {a b ℓ₁ ℓ₂}
   {G : Set a}       -- The underlying set (group carrier
   {Ω : Set b}       -- The underlying set (space)
-  (_≈₁_ : Rel G ℓ₁) -- The underlying group equality (explicit)
-  (_≈₂_ : Rel Ω ℓ₂) -- The underlying space equality (explicit)
+  (_≈_ : Rel G ℓ₁) -- The underlying group equality
+  (_≋_ : Rel Ω ℓ₂) -- The underlying space equality
   where
 
 open import Level using (_⊔_)
@@ -22,11 +22,8 @@ record IsAction
   where
 
   field
-    isEquivalence : IsEquivalence _≈₂_
-    isGroup       : IsGroup _≈₁_ ∙ ε ⁻¹
-    actAssoc      : ActAssoc _≈₂_ · ∙
-    actId         : ActId _≈₂_ ε ·
-
-  -- TODO:
-  -- ·-cong : congruence on Ω wrt ·
-  -- setoid : Setoid on Ω-equivalence
+    isEquivalence : IsEquivalence _≋_
+    isGroup       : IsGroup _≈_ ∙ ε ⁻¹
+    actAssoc      : ActAssoc _≋_ · ∙
+    actId         : ActId _≋_ ε ·
+    actCong       : ActCongruent _≋_ ·
