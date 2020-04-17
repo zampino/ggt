@@ -18,3 +18,6 @@ gcong o o' g p = ·-cong g p
 
 ginv  : ∀ (o p : Ω) (g : Carrier G) → o · g ≋ p → o ≋ p · (_⁻¹ G) g
 ginv o p g x = {!   !} -- where open Group G
+
+-- stabilizerIsSubGroup : ∀ (o : Ω) → isSubgroup G (Stab o)
+-- stabilizerIsSubGroup o = λ x y px py → {!    !}

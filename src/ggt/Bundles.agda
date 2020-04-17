@@ -23,3 +23,10 @@ record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  whe
 
   open IsAction isAction public
 
+  -- the (raw) pointwise stabilizer
+  Stab : Ω → Pred (Carrier G) ℓ₂
+  Stab o = λ (g : (Carrier G)) → o ≋ (o · g)
+
+  -- TODO: orbital equivalence
+  -- _orbit_    : Rel Ω ℓ₂
+  -- o orbit o' = ∃ (g : G) → (o · g) ≋ o'
