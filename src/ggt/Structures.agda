@@ -26,4 +26,7 @@ record IsAction
     isGroup       : IsGroup _≈_ ∙ ε ⁻¹
     actAssoc      : ActAssoc _≋_ · ∙
     actId         : ActId _≋_ ε ·
-    actCong       : ActCongruent _≋_ ·
+    ·-cong        : ActCongruent _≋_ ·
+
+  setoid : Setoid b ℓ₂
+  setoid = record { isEquivalence = isEquivalence }

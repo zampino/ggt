@@ -9,4 +9,3 @@ module GGT where
 open import GGT.Definitions public
 open import GGT.Structures public
 open import GGT.Bundles public
--- some formalised results
