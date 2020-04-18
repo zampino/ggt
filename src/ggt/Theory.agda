@@ -10,13 +10,14 @@ open import Level
 open import Relation.Unary
 open import Algebra
 
-open Group
+-- open import Relation.Binary.Reasoning.Setoid A.setoid
 open Action A
+open Group G
 
-gcong : ∀ (o o' : Ω) (g : Carrier G) → (o ≋ o') → (o · g) ≋ (o' · g)
+gcong : ∀ (o o' : Ω) (g : Carrier) → (o ≋ o') → (o · g) ≋ (o' · g)
 gcong o o' g p = ·-cong g p
 
-ginv  : ∀ (o p : Ω) (g : Carrier G) → o · g ≋ p → o ≋ p · (_⁻¹ G) g
+ginv  : ∀ (o p : Ω) (g : Carrier) → o · g ≋ p → o ≋ p · g ⁻¹
 ginv o p g x = {!   !} -- where open Group G
 
 -- stabilizerIsSubGroup : ∀ (o : Ω) → isSubgroup G (Stab o)
