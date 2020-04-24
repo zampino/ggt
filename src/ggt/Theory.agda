@@ -10,15 +10,21 @@ open import Level
 open import Relation.Unary
 open import Algebra
 
--- open import Relation.Binary.Reasoning.Setoid A.setoid
-open Action A
-open Group G
+open Action A renaming (setoid to S)
+-- open import Relation.Binary.Reasoning.MultiSetoid -- combines S and S'
+open import Relation.Binary.Reasoning.Setoid S
+open Group G -- renaming (setoid to S')
 
-gcong : ∀ (o o' : Ω) (g : Carrier) → (o ≋ o') → (o · g) ≋ (o' · g)
-gcong o o' g p = ·-cong g p
+subg = IsSubgroup _≈_ _≋_
+syntax subg G P = P ≤ G
 
-ginv  : ∀ (o p : Ω) (g : Carrier) → o · g ≋ p → o ≋ p · g ⁻¹
-ginv o p g x = {!   !} -- where open Group G
-
--- stabilizerIsSubGroup : ∀ (o : Ω) → isSubgroup G (Stab o)
--- stabilizerIsSubGroup o = λ x y px py → {!    !}
+stabIsSubGroup : ∀ (o : Ω) → (Stab o) ≤ G
+stabIsSubGroup o = λ x y px py → begin
+                                    (o · (x - y))  ≡⟨⟩
+                                    o · x ∙ (y ⁻¹) ≈⟨ actAssoc o x (y ⁻¹) ⟩
+                                    (o · x) · y ⁻¹ ≈⟨ ·-cong (y ⁻¹) px ⟩
+                                    o · y ⁻¹  ≈˘⟨ ·-cong (y ⁻¹) py ⟩
+                                    (o · y) · y ⁻¹ ≈˘⟨ actAssoc o y (y ⁻¹) ⟩
+                                    o · (y ∙ y ⁻¹) ≈⟨ G-ext (inverseʳ y) ⟩
+                                    o · ε ≈⟨ actId o ⟩
+                                    o ∎

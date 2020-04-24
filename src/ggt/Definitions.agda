@@ -28,6 +28,8 @@ ActLeftIdentity ε _·_ = ∀ (o : Ω) → (o · ε) ≋ o
 ≈-Ext _·_ = ∀ {g h : G} → ∀ {o : Ω} → g ≈ h → (o · g) ≋ (o · h)
 
 -- generic group definitions
-isSubgroup : {l : Level} →
-             (G : Group a ℓ₁) → Pred (Group.Carrier G) l → Set _
-isSubgroup G P = ∀ (x y : Carrier) → P x → P y → P (y ⁻¹ ∙ x) where open Group G
+IsSubgroup : {l : Level} → (G : Group a ℓ₁) → (Pred (Group.Carrier G) l) → Set (a ⊔ l)
+IsSubgroup G P = ∀ (x y : Carrier) → P x → P y → P (x - y) where open Group G
+
+-- xy-1 ∈ H => xy-1 = h => h'xy-1 = h'' => h'x = h''y -- right cosets
+-- x ↦ ω · x = ω · yx-1 · x = ω · y
