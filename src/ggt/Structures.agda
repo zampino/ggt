@@ -2,8 +2,8 @@ open import Relation.Binary using (Rel; Setoid; IsEquivalence)
 
 module GGT.Structures
   {a b ℓ₁ ℓ₂}
-  {G : Set a}       -- The underlying set (group carrier
-  {Ω : Set b}       -- The underlying set (space)
+  {G : Set a}      -- The underlying group carrier
+  {Ω : Set b}      -- The underlying set space
   (_≈_ : Rel G ℓ₁) -- The underlying group equality
   (_≋_ : Rel Ω ℓ₂) -- The underlying space equality
   where
@@ -24,9 +24,13 @@ record IsAction
   field
     isEquivalence : IsEquivalence _≋_
     isGroup       : IsGroup _≈_ ∙ ε ⁻¹
-    actAssoc      : ActAssoc _≋_ · ∙
-    actId         : ActId _≋_ ε ·
-    ·-cong        : ActCongruent _≋_ ·
+    actAssoc      : ActAssoc _≈_ _≋_ · ∙
+    actId         : ActLeftIdentity _≈_ _≋_ ε ·
+    ·-cong        : ·-≋-Congruence _≈_ _≋_ ·
+    G-ext         : ≈-Ext _≈_ _≋_ ·
 
   setoid : Setoid b ℓ₂
-  setoid = record { isEquivalence = isEquivalence }
+  setoid = record
+    { Carrier = Ω;
+      _≈_ = _≋_;
+      isEquivalence = isEquivalence }
