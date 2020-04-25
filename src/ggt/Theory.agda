@@ -14,9 +14,7 @@ open Action A renaming (setoid to S)
 -- open import Relation.Binary.Reasoning.MultiSetoid -- combines S and S'
 open import Relation.Binary.Reasoning.Setoid S
 open Group G -- renaming (setoid to S')
-
-subg = IsSubgroup _≈_ _≋_
-syntax subg G P = P ≤ G
+open import GGT.Group.Definitions
 
 stabIsSubGroup : ∀ (o : Ω) → (Stab o) ≤ G
 stabIsSubGroup o = λ x y px py → begin
