@@ -14,12 +14,13 @@ open Action A renaming (setoid to S)
 -- open import Relation.Binary.Reasoning.MultiSetoid -- combines S and S'
 open import Relation.Binary.Reasoning.Setoid S
 open Group G -- renaming (setoid to S')
-open import GGT.Group.Structures
+open import GGT.Group.Structures {a} {ℓ₂} {ℓ₁}
 
 stabIsSubGroup : ∀ (o : Ω) → (Stab o) ≤ G
 stabIsSubGroup o = record { ε∈ = actId o ;
-                            is-∙-Closed = itis} where
-  itis = λ x y px py → begin
+                            ∙-⁻¹-closed = itis ;
+                            r = resp } where
+  itis = λ {x} {y} px py → begin
                         (o · (x - y))  ≡⟨⟩
                         o · x ∙ (y ⁻¹) ≈⟨ actAssoc o x (y ⁻¹) ⟩
                         (o · x) · y ⁻¹ ≈⟨ ·-cong (y ⁻¹) px ⟩
@@ -28,3 +29,7 @@ stabIsSubGroup o = record { ε∈ = actId o ;
                         o · (y ∙ y ⁻¹) ≈⟨ G-ext (inverseʳ y) ⟩
                         o · ε ≈⟨ actId o ⟩
                         o ∎
+  resp : ∀ {x y : Carrier} → x ≈ y → ((Stab o) x) → ((Stab o) y)
+  resp {x} {y} x~y xfixeso = begin o · y ≈˘⟨ G-ext x~y ⟩
+                               o · x ≈⟨ xfixeso ⟩
+                               o ∎
