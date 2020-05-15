@@ -56,3 +56,22 @@ postulate
 
 _ : Set (Level.suc m)
 _  = Set m
+
+open import Data.Product
+
+postulate
+  A : Set a
+  P : A → Set b
+  σ : (a : A) → (P a)
+
+w : A → Σ[ a ∈ A ] (P a)
+w a = (a , σ a)
+
+w' : A → Σ A (λ a → P a)
+w' a = (a , σ a)
+
+w'' : A → ∃[ a ] (P a)
+w'' a = (a , σ a)
+
+-- Setoid → Partition S
+-- | S | = sum c | c |

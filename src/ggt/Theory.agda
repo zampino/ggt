@@ -7,16 +7,17 @@ module GGT.Theory
   where
 
 open import Level
-open import Relation.Unary
+open import Relation.Unary hiding (_\\_)
 open import Algebra
 
-open Action A renaming (setoid to S)
+open Action A renaming (setoid to Ω')
 -- open import Relation.Binary.Reasoning.MultiSetoid -- combines S and S'
-open import Relation.Binary.Reasoning.Setoid S
+open import Relation.Binary.Reasoning.Setoid Ω'
 open Group G -- renaming (setoid to S')
 open import GGT.Group.Structures {a} {ℓ₂} {ℓ₁}
+open import GGT.Group.Bundles {a} {ℓ₂} {ℓ₁}
 
-stabIsSubGroup : ∀ (o : Ω) → (Stab o) ≤ G
+stabIsSubGroup : ∀ (o : Ω) → (stab o) ≤ G
 stabIsSubGroup o = record { ε∈ = actId o ;
                             ∙-⁻¹-closed = itis ;
                             r = resp } where
@@ -29,7 +30,15 @@ stabIsSubGroup o = record { ε∈ = actId o ;
                         o · (y ∙ y ⁻¹) ≈⟨ G-ext (inverseʳ y) ⟩
                         o · ε ≈⟨ actId o ⟩
                         o ∎
-  resp : ∀ {x y : Carrier} → x ≈ y → ((Stab o) x) → ((Stab o) y)
+  resp : ∀ {x y : Carrier} → x ≈ y → ((stab o) x) → ((stab o) y)
   resp {x} {y} x~y xfixeso = begin o · y ≈˘⟨ G-ext x~y ⟩
                                o · x ≈⟨ xfixeso ⟩
                                o ∎
+Stab : Ω → SubGroup G
+Stab o = record { P = stab o;
+                  isSubGroup = stabIsSubGroup o}
+
+open import Function.Bundles
+
+orbitalCorr : {o : Ω} → Bijection (Stab o \\ G) Ω'
+orbitalCorr = {!   !}

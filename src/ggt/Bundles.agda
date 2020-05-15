@@ -2,10 +2,11 @@ module GGT.Bundles where
 
 open import Level
 open import Relation.Unary
-open import Relation.Binary using (Rel)
+open import Relation.Binary -- using (Rel)
 open import Algebra.Core
 open import Algebra.Bundles
 open import GGT.Structures
+open import Data.Product
 
 -- do we need a left action definition?
 -- parametrize over Op r/l?
@@ -24,10 +25,19 @@ record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  whe
   open IsAction isAction public
 
   -- the (raw) pointwise stabilizer
-  Stab : Ω → Pred (Carrier G) ℓ₂
-  Stab o = λ (g : Carrier G) → o · g ≋ o
+  stab : Ω → Pred (Carrier G) ℓ₂
+  stab o = λ (g : Carrier G) → o · g ≋ o
 
   -- TODO: orbital equivalence
-  -- _orbit_    : Rel Ω ℓ₂
   -- ·G : Ω → Pred
-  -- o orbit o' = ∃ (g : G) → (o · g) ≋ o'
+
+  _ω_  : Rel Ω (a ⊔ ℓ₂)
+  o ω o' = ∃[ g ] (o · g ≋ o')
+
+  _·G : Ω → Pred Ω (a ⊔ ℓ₂)
+  o ·G = o ω_
+
+  Orbit : Ω → Set (a ⊔ b ⊔ ℓ₂)
+  -- classOf ω o -- [ o ] mod ω
+  Orbit o = Σ[ o' ∈ Ω ] (o ω o')
+  -- Orbit o = ?

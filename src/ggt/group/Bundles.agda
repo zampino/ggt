@@ -22,8 +22,8 @@ record SubGroup (G : Group a ℓ) : Set (a ⊔ suc b ⊔ ℓ) where
 cosetʳRel : {G : Group a ℓ} → (SubGroup G) → Setoid a b
 
 cosetʳRel {G} H = record { Carrier = Carrier;
-                         _≈_ = _∼_;
-                         isEquivalence = iseq} where
+                           _≈_ = _∼_;
+                           isEquivalence = iseq} where
                   open SubGroup H
                   open import GGT.Group.Facts G
                   iseq = record {refl  = cosetRelRefl isSubGroup ;
