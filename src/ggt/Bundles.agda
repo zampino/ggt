@@ -13,7 +13,7 @@ open import Data.Product
 record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  where
   infix 6 _·_
   infix 3 _≋_
-  open Group renaming (setoid to s)
+  open Group hiding (setoid)
   field
     G : Group a ℓ₁
     Ω : Set b
@@ -27,9 +27,10 @@ record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  whe
   stab : Ω → Pred (Carrier G) ℓ₂
   stab o = λ (g : Carrier G) → o · g ≋ o
 
-  -- TODO: orbital relation is equivalence refining ≋
+  -- Orbital relation
   _ω_  : Rel Ω (a ⊔ ℓ₂)
   o ω o' = ∃[ g ] (o · g ≋ o')
+  -- TODO: ω is equivalence refining ≋
 
   _·G : Ω → Pred Ω (a ⊔ ℓ₂)
   o ·G = o ω_
