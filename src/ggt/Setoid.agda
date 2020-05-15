@@ -1,8 +1,9 @@
 open import Relation.Binary
-
+open import Level
 module GGT.Setoid
-  {a b l}
-  (S : Setoid a l)
+  {a ℓ}
+  (S : Setoid a ℓ)
+  (l : Level)
   where
 
 open import Level
@@ -13,7 +14,7 @@ open import Relation.Binary.Construct.On renaming (isEquivalence to isEq)
 
 open import Function
 
-subSetoid : (Pred Carrier b) → Setoid (a ⊔ b) l
+subSetoid : (Pred Carrier l) → Setoid (a ⊔ l) ℓ
 subSetoid P =
   record { Carrier = Σ Carrier P ;
            _≈_ = (_≈_ on proj₁) ;

@@ -1,4 +1,4 @@
-module Test where
+module Scratch where
 open import Level
 open import Algebra
 open import Relation.Binary
