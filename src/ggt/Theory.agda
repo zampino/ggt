@@ -29,9 +29,9 @@ stabIsSubGroup o = record { ε∈ = actId o ;
   itis = λ {x} {y} px py → begin⟨ Ω' ⟩
                         (o · (x - y))  ≡⟨⟩
                         o · x ∙ (y ⁻¹) ≈⟨ actAssoc o x (y ⁻¹) ⟩
-                        (o · x) · y ⁻¹ ≈⟨ ·-cong (y ⁻¹) px ⟩
+                        o · x · y ⁻¹ ≈⟨ ·-cong (y ⁻¹) px ⟩
                         o · y ⁻¹  ≈˘⟨ ·-cong (y ⁻¹) py ⟩
-                        (o · y) · y ⁻¹ ≈˘⟨ actAssoc o y (y ⁻¹) ⟩
+                        o · y · y ⁻¹ ≈˘⟨ actAssoc o y (y ⁻¹) ⟩
                         o · (y ∙ y ⁻¹) ≈⟨ G-ext (inverseʳ y) ⟩
                         o · ε ≈⟨ actId o ⟩
                         o ∎
@@ -59,19 +59,19 @@ orbitalCorr {o} = record { f = f ;
   cc : f Preserves _≈₁_ ⟶ _≈₂_
   cc {g} {h} g≈₁h = begin⟨ Ω' ⟩  -- f h ≈₂ f g
                       o · g ≈˘⟨ actId (o · g) ⟩
-                      (o · g) · ε ≈˘⟨ G-ext (inverseˡ h) ⟩
-                      (o · g) · (h ⁻¹ ∙ h ) ≈˘⟨ actAssoc o g (h ⁻¹ ∙ h ) ⟩
+                      o · g · ε ≈˘⟨ G-ext (inverseˡ h) ⟩
+                      o · g · (h ⁻¹ ∙ h ) ≈˘⟨ actAssoc o g (h ⁻¹ ∙ h ) ⟩
                       o · (g  ∙ (h ⁻¹ ∙ h )) ≈˘⟨ G-ext (assoc _ _ _) ⟩
                       o · ((g  ∙ h ⁻¹) ∙ h ) ≈⟨ actAssoc _ _ h ⟩
-                      (o · (g  ∙ h ⁻¹)) · h ≈⟨ ·-cong h g≈₁h ⟩
+                      o · (g  ∙ h ⁻¹) · h ≈⟨ ·-cong h g≈₁h ⟩
                       -- g≈₁h ⇒ P (g ∙ h ⁻¹) ⇒ (g ∙ h ⁻¹) ∈ Stab o
                       o · h ∎
   inj : _
   -- o · g = o · h ⇒ g ∙ h ⁻¹ ∈ Stab o
   inj {g} {h} fg≈₂fh = begin⟨ Ω' ⟩
                          o · g ∙ h ⁻¹ ≈⟨ actAssoc _ _ _ ⟩
-                         (o · g) · h ⁻¹ ≈⟨ ·-cong _ fg≈₂fh ⟩
-                         (o · h) · h ⁻¹ ≈˘⟨ actAssoc _ _ _ ⟩
+                         o · g · h ⁻¹ ≈⟨ ·-cong _ fg≈₂fh ⟩
+                         o · h · h ⁻¹ ≈˘⟨ actAssoc _ _ _ ⟩
                          o · (h ∙ h ⁻¹) ≈⟨ G-ext (inverseʳ h)⟩
                          o · ε ≈⟨ actId o ⟩
                          o ∎

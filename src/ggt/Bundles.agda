@@ -11,7 +11,7 @@ open import Data.Product
 -- parametrize over Op r/l?
 
 record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  where
-  infix 6 _·_
+  infixl 6 _·_
   infix 3 _≋_
   open Group hiding (setoid)
   field
