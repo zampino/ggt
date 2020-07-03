@@ -7,7 +7,7 @@ module GGT.Theory
   where
 
 open import Level
-open import Relation.Unary hiding (_\\_)
+open import Relation.Unary hiding (_\\_; _⇒_)
 open import Relation.Binary
 open import Algebra
 open import Data.Product
@@ -47,6 +47,13 @@ orbitalEq = record { refl =  r ;
               x · g · h ≈⟨ ·-cong _ x·g≡y ⟩
               y · h ≈⟨ y·h≡z ⟩
               z ∎
+
+ω≤≋ : _≋_ ⇒ _ω_
+ω≤≋ {o} {o'} o≋o' = (ε , oε≋o' ) where
+  oε≋o' = begin⟨ Ω' ⟩
+            o · ε ≈⟨ actId o ⟩
+            o ≈⟨ o≋o' ⟩
+            o' ∎
 
 stabIsSubGroup : ∀ (o : Ω) → (stab o) ≤ G
 stabIsSubGroup o = record { ε∈ = actId o ;

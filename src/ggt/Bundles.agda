@@ -30,11 +30,11 @@ record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  whe
   -- Orbital relation
   _ω_  : Rel Ω (a ⊔ ℓ₂)
   o ω o' = ∃[ g ] (o · g ≋ o')
-  -- TODO: ω is equivalence refining ≋
 
   _·G : Ω → Pred Ω (a ⊔ ℓ₂)
   o ·G = o ω_
 
+  -- Orbits
   open import GGT.Setoid setoid (a ⊔ ℓ₂)
   Orbit : Ω → Setoid (b ⊔ (a ⊔ ℓ₂)) ℓ₂
   Orbit o = subSetoid (o ·G)
