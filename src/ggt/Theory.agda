@@ -1,8 +1,8 @@
 open import GGT
 
+-- Throughout the following assume A is a (right) Action
 module GGT.Theory
   {a b ℓ₁ ℓ₂}
-  -- Throughout the following assume A is a (right) Action
   (A : Action a b ℓ₁ ℓ₂)
   where
 

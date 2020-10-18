@@ -10,7 +10,7 @@ open import Data.Nat.Base as ℕ using (ℕ;_+_;_∸_;suc;zero; _<_)
 open import Data.Bool using (not; Bool)
 open import Data.Bool.Properties hiding (_≟_)
 open import Data.Product
-open import Data.Sum renaming ([_,_] to _⊕_)
+open import Data.Sum renaming ([_,_] to _⊞_)
 open import Data.Vec hiding (allFin)
 open import Data.Vec.Properties
 open import Data.Fin.Properties using (∃-toSum)
@@ -27,8 +27,21 @@ open import Data.Maybe
 open import Data.List.Base renaming (tabulate to tab ;
                                      foldr to fold;
                                      [] to <>;
-                                     [_] to <_>)
-                           hiding (tail; lookup; any)
+                                     [_] to <_>;
+                                     map to lmap;
+                                     lookup to llookup)
+                           hiding (tail; any)
+open import Data.List.Properties
+open import Data.List.Membership.Propositional
+  renaming (_∈_ to _∈ℓ_)
+open import Data.List.Membership.Propositional.Properties
+open import Data.List.Relation.Unary.Any as Any hiding (tail)
+open import Data.List.Relation.Unary.Any.Properties
+open import Data.List.Relation.Unary.All as All
+open import Data.List.Relation.Unary.AllPairs as AllPairs
+open import Data.List.Relation.Unary.AllPairs.Properties
+
+
 open import Function.Base
 
 open import Relation.Nullary
@@ -50,6 +63,9 @@ s\\⊥≡s {n} S = begin
 
 Disj : ∀ {n} → Subset n → Subset n → Set
 Disj S T = S ∩ T ≡ ⊥
+
+Disj-sym : ∀ {n} → Symmetric (Disj {n = n})
+Disj-sym {n} {S} {T} S∩T≡⊥ = begin T ∩ S ≡⟨ ∩-comm T S ⟩ S ∩ T ≡⟨ S∩T≡⊥ ⟩ ⊥ ∎
 
 ∩-⊆-stable : ∀ {n} → ∀ {p q} → (r : Subset n) → p ⊆ q → (p ∩ r) ⊆ (q ∩ r)
 ∩-⊆-stable {_} {p} {q} r p⊆q x∈p∩r = let
@@ -102,10 +118,10 @@ disj⇒⊆∁ {n} {S} {T} dst = let ct≡suct = begin
 p⊆r×q⊆r⇒p∪q⊆r : ∀ {n} → { p q r : Subset n} → (p ⊆ r) × (q ⊆ r) → (p ∪ q) ⊆ r
 p⊆r×q⊆r⇒p∪q⊆r {n} {p} {q} {r} (p⊆r , q⊆r) x∈p∪q = let
                                                     y = x∈p∪q⁻ {n} p q x∈p∪q
-                                                    in (p⊆r ⊕ q⊆r) y
+                                                    in (p⊆r ⊞ q⊆r) y
 
 pᵢ⊆q⇒⋃pᵢ⊆q : ∀ {n m} → (S : Subset n) → (ϕ : Fin m → Subset n) →
-    (∀ i → (ϕ i) ⊆ S) → (⋃ (tab ϕ) ⊆ S)
+             (∀ i → (ϕ i) ⊆ S) → (⋃ (tab ϕ) ⊆ S)
 
 pᵢ⊆q⇒⋃pᵢ⊆q {_} {zero} S _ _ = ⊆-min S
 pᵢ⊆q⇒⋃pᵢ⊆q {n} {suc m} S ϕ Δ = let
@@ -113,13 +129,18 @@ pᵢ⊆q⇒⋃pᵢ⊆q {n} {suc m} S ϕ Δ = let
                         y = p⊆r×q⊆r⇒p∪q⊆r ( Δ fzero , pᵢ⊆q⇒⋃pᵢ⊆q S (λ z → ϕ (fsuc z)) (λ i → Δ (fsuc i)) )
                         in subst₂ _⊆_ refl refl y
 
+pᵢ⊆q⇒⋃pᵢ⊆q-list : ∀ {n} → ∀ S → ∀ (L : List (Subset n)) →
+                  All (_⊆ S) L → (⋃ L) ⊆ S
+pᵢ⊆q⇒⋃pᵢ⊆q-list S <> _ = ⊆-min S
+pᵢ⊆q⇒⋃pᵢ⊆q-list S (x ∷ xs) (h ∷ t) = subst₂ _⊆_ refl refl (p⊆r×q⊆r⇒p∪q⊆r ( h , pᵢ⊆q⇒⋃pᵢ⊆q-list S xs t ))
+
 -- obvious but exposes S for computation later
 drop-outside : ∀ {n} → (S : Subset n) → ∣ outside ∷ S ∣ ≡ ∣ S ∣
 drop-outside S = refl
 
 drop-disj : ∀ {n} → {x y : Side} → {p q : Subset n} → Disj (x ∷ p) (y ∷ q) → Disj p q
 drop-disj {zero} {_} {_} {[]} {[]} _ = refl
-drop-disj d = cong tail d
+drop-disj d = cong Data.Vec.tail d
 
 ∣p⊍q∣≡∣p∣+∣q∣ : ∀ {n} → ∀ (p q : Subset n) → Disj p q → ∣ p ∪ q ∣ ≡ ∣ p ∣ + ∣ q ∣
 ∣p⊍q∣≡∣p∣+∣q∣ {zero} [] [] d = refl
@@ -178,26 +199,66 @@ drop-disj d = cong tail d
                                         (⋃ (tab (ϕ ∘ fsuc))) ∩ (ϕ fzero) ≡⟨ e ⟩
                                         ⊥ ∎
 
--- ⦃ [ x ]ω ∣ x ∈ transversal ⦄
-mapOn : ∀ {n} {A : Set} (f : Fin n → A) → (s : Subset n) → List A
-mapOn {n} {A} f s = mapMaybe fon (allFin n) where
-                      fon : Fin n → Maybe A
-                      fon j with does (j ∈? s)
-                      ... | inside = just (f j)
-                      ... | outside = nothing
+∣⋃ᵢpᵢ∣≡Σᵢ∣pᵢ∣-list : ∀ {n} (C : List (Subset n)) →
+                     AllPairs Disj C →
+                     ∣ ⋃ C ∣ ≡ fold _+_ 0 (lmap ∣_∣ C)
+∣⋃ᵢpᵢ∣≡Σᵢ∣pᵢ∣-list {n} <> Δℓ = begin
+                             ∣ ⋃ {n} <> ∣ ≡⟨⟩
+                             -- ∣ fold (_∪_ {n}) ⊥ <> ∣ ≡⟨⟩
+                             ∣ ⊥ {n} ∣ ≡⟨ ∣⊥∣≡0 n ⟩
+                             0 ≡⟨⟩
+                             fold _+_ 0 <> ∎
+∣⋃ᵢpᵢ∣≡Σᵢ∣pᵢ∣-list {n} (s ∷ C) (h ∷ t) = begin
+                                  ∣ ⋃ (s ∷ C) ∣ ≡⟨⟩
+                                  ∣ s ∪ (⋃ C) ∣ ≡⟨ ∣p⊍q∣≡∣p∣+∣q∣ s (⋃ C) DisjsUC ⟩
+                                  ∣ s ∣ + ∣ ⋃ C ∣ ≡⟨ cong (∣ s ∣ +_) (∣⋃ᵢpᵢ∣≡Σᵢ∣pᵢ∣-list {n} C t ) ⟩
+                                  ∣ s ∣ + (fold _+_ 0 (lmap ∣_∣ C)) ≡⟨⟩
+                                  fold _+_ 0 (lmap ∣_∣ (s ∷ C)) ∎
+                                  where
+                                  a : All (λ x → x ⊆ ∁ s) C
+                                  a = All.map (disj⇒⊆∁ ∘ Disj-sym) h
+                                  c : ⋃ C ⊆ ∁ s
+                                  c = pᵢ⊆q⇒⋃pᵢ⊆q-list (∁ s) C a
+                                  e : Disj (⋃ C) s
+                                  e = ⊆∁⇒disj c
+                                  DisjsUC : Disj s (⋃ C)
+                                  DisjsUC = Disj-sym e
 
--- syntax mapOn f s = ⦃ f x | x ∈ s ⦄
+⋃-remove : ∀ {n} {L : List (Subset n)} →
+           ∀ s → (s∈L : s ∈ℓ L) →
+           (⋃ L) ≡ s ∪ ⋃ (L Any.─ s∈L)
+⋃-remove {n} {<>} _ = λ ()
+⋃-remove {n} {x ∷ xs} s (here px) = begin
+                                      ⋃ (x ∷ xs) ≡⟨ refl ⟩
+                                      x ∪ (⋃ xs) ≡˘⟨ cong (_∪ _) px ⟩
+                                      s ∪ (⋃ xs) ≡⟨ cong (_ ∪_) refl ⟩
+                                      s ∪ ⋃ ((x ∷ xs) Data.List.Base.─ fzero ) ≡⟨ cong (_ ∪_) refl ⟩
+                                      s ∪ ⋃ ((x ∷ xs) Any.─ (here {P = P} px)) ∎
+                                      where
+                                      P : Pred (Subset n) lzero
+                                      P = s ≡_
 
--- sub-cover : ∀ {m n} → (ϕ : Fin m → Subset n) →
---             ∀ (x : Fin n) → (∃ λ s → x ∈ ϕ s) →
---             ⊤ ≡ ⋃ (tab ϕ)
--- sub-cover ϕ x ( j , x∈ϕj ) = {!   !}
+⋃-remove {n} {x ∷ xs} s (there s∈L) = begin
+                                        x ∪ (⋃ xs) ≡⟨ cong (x ∪_) (⋃-remove {L = xs} s s∈L) ⟩
+                                        x ∪ (s ∪ ⋃ (xs Any.─ s∈L)) ≡˘⟨ ∪-assoc _ _ _ ⟩ -- TODO: -- use solver
+                                        (x ∪ s) ∪ ⋃ (xs Any.─ s∈L) ≡⟨ cong (_∪ _) (∪-comm x s) ⟩
+                                        (s ∪ x) ∪ ⋃ (xs Any.─ s∈L) ≡⟨ ∪-assoc _ _ _ ⟩
+                                        s ∪ (x ∪ ⋃ (xs Any.─ s∈L)) ≡⟨ refl ⟩
+                                        s ∪ ⋃ ((x ∷ xs) Any.─ (there s∈L)) ∎
 
-reify : ∀ {n} → (p : Subset n) → List (Fin n)
-reify {.0} [] = <>
-reify {suc n} (outside ∷ p) = Data.List.Base.map fsuc (reify {n} p)
-reify {suc n} (inside ∷ p) = fzero ∷ (Data.List.Base.map fsuc (reify {n} p))
+cover-⊤ : ∀ {n} → (L : List (Subset n)) →
+          (∀ (x : Fin n) → Any (x ∈_) L ) →
+          ⊤ {n} ≡ ⋃ L
 
+cover-⊤ {n} L ∃lx∈l = ⊆-antisym ⊤⊆⋃L (⊆-max (⋃ L)) where
+  ⊤⊆⋃L : ⊤ ⊆ (⋃ L)
+  ⊤⊆⋃L {x} _ = let
+                  (l , l∈ℓL , x∈l) = find {P = x ∈_} (∃lx∈l x)
+                  l⊆l∪* = p⊆p∪q {p = l} (⋃ (L Any.─ l∈ℓL))
+                  x∈l∪* = l⊆l∪* {x} x∈l
+                in subst₂ _∈_ refl (sym (⋃-remove l l∈ℓL)) x∈l∪*
+
+-- 👇 not essential
 
 |s\\t| : ∀ {n : ℕ} → ∀ {S T : Subset n} → T ⊆ S → ∣ S \\ T ∣ ≡ ∣ S ∣ ∸ ∣ T ∣
 |s\\t| {.0} {[]} {T} t⊆s = begin
@@ -243,14 +304,14 @@ record Partition (n : ℕ) : Set where
     cover : Carrier ≡ ⋃ (tab parts)
 
   traversal : Vec (Fin n) size
-  traversal = tabulate λ i → fst (parts i) (nnd i)
+  traversal = Data.Vec.tabulate λ i → fst (parts i) (nnd i)
 
   _P∈ : (j : Fin n) → Dec ( j ∈ Carrier )
   j P∈ = (j ∈? Carrier)
 
-  open import Data.Vec.Relation.Unary.Any {0ℓ} {Fin n}
-  anyRel : {_≈_ : Rel (Fin n) 0ℓ } → Dec₂ _≈_ → (j : Fin n) → Dec (Any (j ≈_) traversal)
-  anyRel _≈?_ j = any (j ≈?_) traversal
+  -- open import Data.Vec.Relation.Unary.Any {0ℓ} {Fin n}
+  -- anyRel : {_≈_ : Rel (Fin n) 0ℓ } → Dec₂ _≈_ → (j : Fin n) → Dec (Any (j ≈_) traversal)
+  -- anyRel _≈?_ j = any (j ≈?_) traversal
 
   -- do I need this for counting arguments?
   respects : Rel (Fin n) 0ℓ → Set _

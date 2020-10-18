@@ -3,15 +3,13 @@ module Scratch.FinDecEq1 where
 open import Data.Bool.Base hiding (_≤_)
 open import Data.Product
 open import Data.Sum
-open import Level renaming (suc to lsuc; _⊔_ to _⊔ℓ_)
-                  hiding (zero)
+open import Level renaming (suc to lsuc; _⊔_ to _⊔ℓ_; zero to lzero)
 
 open import Relation.Nullary
 open import Relation.Nullary.Decidable
 
--- open import Relation.Unary renaming (Decidable to DecP)
---                            hiding (_∈_)
-open import Relation.Binary
+open import Relation.Unary using (Decidable)
+open import Relation.Binary hiding (Decidable)
 
 open import Function.Base
 -- open import Function.Bijection hiding (_∘_)
@@ -24,15 +22,28 @@ open import Data.Fin.Properties hiding (to-from)
 
 open import Data.List.Base renaming (tabulate to tab;
                                      lookup to nth;
-                                     map to lmap;
                                      filter to lfilter;
                                      allFin to allF)
+open import Data.List.Properties
 open import Data.List.Relation.Unary.Any
-open import Data.List.Membership.Setoid.Properties
+-- open import Data.List.Membership.Propositional renaming (_∈_ to _∈ℓ_)
+-- open import Data.List.Membership.Propositional.Properties
+open import Data.List.Relation.Unary.Any as Any -- hiding (tail)
+open import Data.List.Relation.Unary.Any.Properties hiding (tabulate⁺)
+open import Data.List.Relation.Unary.All as All hiding (tabulate)
+open import Data.List.Relation.Unary.AllPairs as AllPairs
+open import Data.List.Relation.Unary.AllPairs.Properties renaming (map⁺ to ap-map⁺)
+
+
+-- :-( can't use Vector because it doesn't have a filter
+-- open import Data.Vec.Functional as Coll
+-- open import Data.Vec.Functional.Relation.Unary.Any
+--   renaming (here to here'; there to there')
 
 open import Relation.Binary.PropositionalEquality as Eq
 open Eq.≡-Reasoning
 
+open import Scratch.Data.List.Relation.Helpers
 open import Scratch.Subset
 
 -- record StronglyFiniteSetoid (n : ℕ) : Set (lsuc (c ⊔ℓ ℓ)) where
@@ -55,8 +66,6 @@ open import Scratch.Subset
   -- /Users/amantini/dev/agda/agda-stdlib/README/Data/Interleaving.agda
   -- if ω is decidable then the pullback is a FinDecEq
 
-  -- partition FinDecEq n → Vec (Subset n)
-  --
 open import Data.Vec hiding (length)
                      renaming (lookup to vlookup)
 open import Data.Vec.Properties
@@ -64,7 +73,10 @@ open import Data.Vec.Properties
 open import Data.Fin.Subset
 open import Data.Fin.Subset.Properties
 
-fsuc∈ : ∀ {n} → { p : Subset n} → {x : Fin n} → {s : Side} → (x ∈ p) → (fsuc x) ∈ (s ∷ p)
+lmap = Data.List.Base.map
+syntax lmap (λ x → B) L = ⟦ B ∣ x ∈ℓ L ⟧
+
+fsuc∈ : ∀ {n} → { p : Subset n} → {x : Fin n} → {s : Side} → (x ∈ p) → (fsuc x) ∈ (s Data.Vec.∷ p)
 fsuc∈ here = there here
 fsuc∈ (there x∈p) = there (fsuc∈ x∈p)
 
@@ -90,7 +102,7 @@ fst₋unique s t ns nt s≡t = let fs , fs∈s , fs≤ = (fst₊ s ns)
                                fs∈t = subst _ s≡t fs∈s
                            in ≤-antisym (fs≤ ft∈s) (ft≤ fs∈t)
 
-open import Data.Unit hiding (_≟_)
+open import Data.Unit hiding (_≟_; ⊤)
 -- TODO: see src/Data/List/Membership/Setoid.agda
 --       see src/Relation/Nullary/Decidable.agda
 
@@ -117,6 +129,13 @@ record FinDecEq {a} (n : ℕ) : Set (lsuc a) where
               Carrier to F;
               setoid to std')
     public
+
+  import Data.List.Membership.Propositional
+  module MP = Data.List.Membership.Propositional {A = F}
+  open MP renaming (_∈_ to _∈ℓ_)
+  -- open import Data.List.Membership.Propositional renaming (_∈_ to _∈ℓ_)
+  open import Data.List.Membership.Propositional.Properties
+
 
   [_]ω : (Fin n) → Subset n
   [ o ]ω = tabulate (does ∘ (_ω? o))
@@ -192,77 +211,65 @@ record FinDecEq {a} (n : ℕ) : Set (lsuc a) where
   cr i = i ≡ (c i)
 
   -- c' : (i : F) → cr i × i ω (c i)
-
-  cr? : ∀ (i : F) → Dec (cr i)
+  -- _≟_
+  cr? : Decidable cr
   cr? = λ i → i ≟ (c i)
 
-  cr-disj : (x : F) → (cr x) →
-            (y : F) → (cr y) →
-            x ≢ y → ¬ (x ω y)
-
-  cr-disj x crx y cry x≢y xωy = let x≡y = begin x ≡⟨ crx ⟩
+  cr-disj : ∀ {x y} → (cr x) → (cr y) → x ≢ y → ¬ (x ω y)
+  cr-disj {x} {y} crx cry x≢y xωy = let x≡y = begin x ≡⟨ crx ⟩
                                                 c x ≡⟨ ω⇒c xωy ⟩
                                                 c y ≡˘⟨ cry ⟩
                                                 y ∎
-                                in x≢y x≡y
-
-  transversal : Subset n
-  transversal = tabulate (does ∘ cr?)
+                                    in x≢y x≡y
 
   Tr : List F
   Tr = (lfilter cr? (allF n))
 
-  C : List (Subset n)
-  C = mapOn [_]ω transversal
-  C' : List (Subset n)
-  C' = Data.List.Base.map [_]ω (Data.List.Base.filter cr? (Data.List.Base.allFin n))
+  -- ∈-filter⁻ : ∀ {v xs} → v ∈ filter P? xs → v ∈ xs × P v
 
-  C-cover : ∀ (j : F) → (∃ λ k → cr k × j ω k)
-  C-cover j = (c j) , sym (c-idempt j) , xωcx j
+  -- C : List (Subset n)
+  -- C = ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧
 
-  -- Pⱼ(k) = cr k × j ω k
-  -- any-×⇒filter : ∀ {p q A} {P : A → Set p} {Q : A → Set q} →
-  --                (Q? : Decidable Q) →
-  --             Any (P × Q) xs → Any P (filter Q? xs)
+  --  ap x≢y allF
+  --  ap ¬ x ω y Tr
+  --  ap Disj (map [_] Tr)
 
-  -- P = j ω_
-  -- xs = allFin n ≃ (lookup (tab id) i) = i
-  -- ∈ is propositional membership
-  -- k ∈ xs → P k → Any P xs + lookup
-  -- ∈-lookup : ∀ xs i → (lookup xs i) ∈ xs
-  -- j ω k → Any (j ω_) (allFin n)
+  ap1 : AllPairs _≢_ (allF n)
+  ap1 = tabulate⁺ id
+  ap2 : AllPairs (λ x y → ¬ x ω y) Tr
+  ap2 = filter⁺⁺ cr? cr-disj ap1
 
-  -- P = cr k
+  ap3 : AllPairs Disj ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧
+  ap3 = ap-map⁺ (AllPairs.map ω-Disj ap2)
+
+  C-cover' : ∀ (x : F) → (∃ λ k → cr k × x ω k)
+  C-cover' x = (c x) , sym (c-idempt x) , xωcx x
+
+  C-cover : ∀ (x : F) → Any (x ∈_) ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧
+  C-cover x = let (k , crk , xωk) = C-cover' x
+                  k∈ℓallF : k ∈ℓ allF n
+                  k∈ℓallF = ∈-allFin {n} k
+                  k∈ℓTr : k ∈ℓ Tr
+                  k∈ℓTr = ∈-filter⁺ cr? k∈ℓallF crk
+                  a : Any (x ω_) Tr
+                  a = lose k∈ℓTr xωk
+                  b : Any ((x ∈_) ∘ [_]ω) Tr
+                  b = Any.map ω⇒∈ a
+              -- map⁺ : Any (P ∘ f) xs → Any P (List.map f xs)
+              in map⁺ b
+
+
   --
+  []ω-cover : ⊤ ≡ ⋃ ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧
+  []ω-cover = cover-⊤ ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧ C-cover
 
-  C-cover1 : ∀ (j : F) → (∃ λ k → cr k × j ∈ [ k ]ω)
-  C-cover1 j = (c j) , (sym (c-idempt j) , ω⇒∈ (xωcx j))
-
-  resp : cr Respects _ω_
-  resp {x} {y} xωy crx = {!   !}
-
-  Tr-cover2 : ∀ (j : F) → Any (j ω_) Tr -- j ∈ω Tr
-  Tr-cover2 j = ?
-  -- use Any.gmap
-  -- Tr-cover3 : ∀ (j : F) → Any (λ s → j ∈ S) (lmap [_]ω Tr)
-
-  ϕ : Fin (length C) → Subset n
-  ϕ j = nth C j
-
-  ϕ-cover : ∀ (x : F) → (∃ λ s → x ∈ (ϕ s))
-  ϕ-cover j = ( {!   !} , {!   !} )
-
-  -- sub-cover : ∀ {m n} → (ϕ : Fin m → Subset n) →
-  --             ∀ (x : Fin n) → (∃ λ s → x ∈ ϕ s) →
-  --             ⊤ ≡ ⋃ (tab ϕ)
-  -- sub-cover ϕ x ( j , x∈ϕj ) = {!   !}
-  -- syntax ⋃[ i < n ] (ϕ i)
-
-  -- sub-cover : ∀ {n} (L : List (Subset n)) →
-                 -- ∀ (x : Fin n) → Any (λ s → x ∈ s) L →
-                 -- ⊤ ≡ ⋃ L
-  -- disj-⋃ : ∀ {n} (L : List (Subset n)) →
-  --          ∀
-
-  -- ⋃[x]ω : F ≡ ⋃ (Data.List.Base.map [_]ω (reify transversal))
-  -- ⋃[x]ω = ?
+  -- Cardinality : n ≡ Data.List.Base.sum ⟦ ∣ [ x ]ω ∣ ∣ x ∈ℓ Tr ⟧
+  -- Cardinality =
+  --   let c = ∣⋃ᵢpᵢ∣≡Σᵢ∣pᵢ∣ ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧ ap3
+  --       in begin
+  --           n ≡˘⟨ ∣⊤∣≡n n ⟩
+  --           ∣ ⊤ {n} ∣ ≡⟨ cong ∣_∣ []ω-cover ⟩
+  --           ∣ ⋃ ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧ ∣ ≡⟨ c ⟩
+  --           -- cong List.sum (map-compose λ t → ∣ [ t ]ω ∣ ) refl
+  --           Data.List.Base.sum (lmap ∣_∣ ⟦ [ x ]ω ∣ x ∈ℓ Tr ⟧) ≡˘⟨ ? ⟩
+  --           Data.List.Base.sum ⟦ ∣ [ x ]ω ∣ ∣ x ∈ℓ Tr ⟧ ∎

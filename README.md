@@ -35,9 +35,9 @@ record Action a b ℓ₁ ℓ₂ : Set (suc (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂))  whe
   Orbit o = subSetoid (o ·G)
 ```
 
-## Proven Facts
+## Orbital Correspondance
 
-[Orbital Correspondence](https://github.com/zampino/ggt/blob/master/src/ggt/Theory.agda#L43) (right cosets of G modulo pointwise stabilisers correspond 1:1 to the orbits of the action)
+[Orbital Correspondence](https://github.com/zampino/ggt/blob/e0a52de02d5bce626579f2575863964e88ef2eda/src/ggt/Theory.agda#L81) (right cosets of G modulo pointwise stabilisers correspond 1:1 to the orbits of the action)
 
 ```agda
 stabIsSubGroup : ∀ (o : Ω) → (stab o) ≤ G
